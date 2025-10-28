@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import api from '../Service/api';
+import api from '../services/api';
 import CustomToast from '../Service/Hook/Toast/CustomToast';
 
 export default function OtpVerificationScreen({ route, navigation }) {
-    const { destination } = route.params; // Can be phone or email
+    const { destination } = route?.params; // Can be phone or email
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [timer, setTimer] = useState(30);
     const [isResendDisabled, setIsResendDisabled] = useState(true);
@@ -32,26 +32,55 @@ export default function OtpVerificationScreen({ route, navigation }) {
         }
     };
 
-    // Verify OTP
+    // // Verify OTP
+    // const verifyOtp = async () => {
+    //     try {
+    //         const enteredOtp = otp.join('');
+    //         console.log(enteredOtp, "ddd");
+    //         console.log(destination, "eee");
+    //         const res = await api.post('/auth/verify-otp',
+    //             { destination, otp: enteredOtp });
+    //         console.log(res, "res");
+
+    //         if (res.status === 200) {
+    //             CustomToast('OTP Verified Successfully');
+    //             navigation.navigate('Login');
+    //         } else {
+    //             CustomToast('Invalid OTP');
+    //         }
+    //     } catch (error) {
+    //         console.log(error?.response?.data || error?.response?.message);
+    //         CustomToast('Verification failed');
+    //     }
+    // };
+
     const verifyOtp = async () => {
         try {
             const enteredOtp = otp.join('');
-            const res = await api.post('/auth/verify-otp', {
+            const payload = {
                 destination,
                 otp: enteredOtp,
-            });
+                username: signupPayload?.username,  // ensure signupPayload passed to this screen
+                password: signupPayload?.password,
+            };
 
-            if (res.data.success) {
-                CustomToast('OTP Verified Successfully');
-                navigation.navigate('Login');
+            const res = await api.post('/auth/verify-otp', payload);
+            // expected response: { token: "...", username: "..." }
+            const token = res?.data?.token;
+            if (token) {
+                // save token to AsyncStorage and context
+                await AsyncStorage.setItem('userToken', token);
+                if (typeof login === 'function') login(token);
+                navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
             } else {
-                CustomToast('Invalid OTP');
+                CustomToast('OTP verified but no token returned');
+                navigation.navigate('Login');
             }
         } catch (error) {
-            CustomToast('Verification failed');
+            console.log('verify err', error?.response?.data || error?.message);
+            CustomToast(String(error?.response?.data || 'Verification failed'));
         }
     };
-
     // Resend OTP
     const resendOtp = async () => {
         try {

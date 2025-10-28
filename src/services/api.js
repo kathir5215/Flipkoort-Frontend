@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 // Set the base URL for your Spring Boot backend
-const API_BASE_URL = 'http://192.168.1.60:8080/api';
+const API_BASE_URL = 'http://192.168.1.19:8080/api';
 
 // Create an axios instance
 const api = axios.create({

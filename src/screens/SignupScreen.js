@@ -53,12 +53,11 @@ export default function SignupScreen({ navigation }) {
         setLoading(true);
         try {
             // request OTP for the phone (backend expects { phone })
-            await api.post('/auth/request-otp', { phone });
+            await api.post('/auth/request-otp', { destination: email });
 
             // navigate to VerifyOtp screen and pass signup data
-            navigation.navigate('VerifyOtp', {
-                signupPayload: { username, email, phone, password, roleNames: ['ROLE_USER'] }
-            });
+            navigation.navigate('VerifyOtp', { destination: email, signupPayload: { username, password } });
+
         } catch (err) {
             console.log('request-otp err', err?.response?.data || err?.message);
             Alert.alert('Error', (err?.response?.data && String(err.response.data)) || 'Failed to request OTP');
